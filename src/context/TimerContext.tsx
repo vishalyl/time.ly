@@ -37,6 +37,8 @@ interface TimerContextType {
     resetTimer: () => void;
     activeTaskId: string | null;
     setActiveTaskId: (id: string | null) => void;
+    activeProjectId: string | null;
+    setActiveProjectId: (id: string | null) => void;
 }
 
 const TimerContext = createContext<TimerContextType | undefined>(undefined);
@@ -47,11 +49,17 @@ export const TimerProvider = ({ children }: { children: React.ReactNode }) => {
     const [isRunning, setIsRunning] = useState(false);
     const [settings, setSettings] = useState<TimerSettings>(DEFAULT_SETTINGS);
     const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+    const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
 
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
     // Simple beep sound
     const playSound = useCallback((type: "start" | "finish") => {
+        // ... (existing playSound logic, omitted for brevity if unchanged, but for replace_file I must include or map correctly)
+        // Since I can't partially match easily inside a large function without full context, I will just keep the existing playSound by not touching it in this targeted replacement if possible.
+        // Or I'll rewrite the whole block if I target a large chunk.
+        // Let's try to target just the interface and provider start, and then separate chunk for syncTime?
+        // I will use multiple chunks.
         try {
             const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
             if (!AudioContext) return;
@@ -85,35 +93,34 @@ export const TimerProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }, []);
 
-    // Definitions moved to above useEffect to be utilized inside it. 
-    // This replace block is actually unnecessary if I included them in the previous large replacement?
-    // Wait, the previous replacement REPLACED the useEffect block but defined `syncTime`, `switchMode`, etc INSIDE or BEFORE it?
-    // The previous replacement content INCLUDED the definitions of syncTime, switchMode, toggleTimer, resetTimer AND the useEffect.
-    // However, the TargetContent of the previous step was ONLY the useEffect.
-    // So the previous step inserted the new functions BUT the old functions `switchMode`, `toggleTimer`, `resetTimer` are still present ABOVE the new block (lines 82-118).
-    // I need to DELETE the old functions now.
-
     const accumulatedSecondsRef = useRef(0);
     const lastTickRef = useRef<number | null>(null);
 
     // Helper to sync time to Firestore
     const syncTime = useCallback(async () => {
-        if (accumulatedSecondsRef.current > 0 && activeTaskId && mode === 'focus') {
+        if (accumulatedSecondsRef.current > 0 && mode === 'focus') {
             const secondsToAdd = accumulatedSecondsRef.current;
             accumulatedSecondsRef.current = 0; // Reset local accumulator
 
             try {
-                // Dynamic import to avoid SSR issues if any, or just consistent pattern
                 const { doc, updateDoc, increment } = await import("firebase/firestore");
                 const { db } = await import("@/lib/firebase");
-                await updateDoc(doc(db, "tasks", activeTaskId), {
-                    totalSeconds: increment(secondsToAdd)
-                });
+
+                if (activeTaskId) {
+                    await updateDoc(doc(db, "tasks", activeTaskId), {
+                        totalSeconds: increment(secondsToAdd)
+                    });
+                } else if (activeProjectId) {
+                    // Track time to project if no task is selected
+                    await updateDoc(doc(db, "projects", activeProjectId), {
+                        totalSeconds: increment(secondsToAdd)
+                    });
+                }
             } catch (e) {
                 console.error("Failed to sync time", e);
             }
         }
-    }, [activeTaskId, mode]);
+    }, [activeTaskId, activeProjectId, mode]);
 
     const switchMode = useCallback((newMode: TimerMode) => {
         syncTime(); // Sync before switching
@@ -179,21 +186,24 @@ export const TimerProvider = ({ children }: { children: React.ReactNode }) => {
             lastTickRef.current = null;
 
             // Handle Time Persistence (Full Pomodoro finish)
-            if (mode === "focus" && activeTaskId) {
+            if (mode === "focus") {
                 syncTime(); // Sync any remaining seconds (should match full duration)
 
                 import("firebase/firestore").then(async ({ doc, updateDoc, increment }) => {
                     try {
                         const { db } = await import("@/lib/firebase");
-                        await updateDoc(doc(db, "tasks", activeTaskId), {
-                            actualPomodoros: increment(1)
-                        });
+                        if (activeTaskId) {
+                            await updateDoc(doc(db, "tasks", activeTaskId), {
+                                actualPomodoros: increment(1)
+                            });
+                        }
+                        // We could also track pomodoros for projects? For now just tasks or time.
                     } catch (e) {
                         console.error("Failed to update task pomodoros", e);
                     }
                 });
             }
-            // Handle auto-switching
+            // Handle auto-switching ...
             if (mode === "focus") {
                 if (settings.autoStartBreaks) {
                     switchMode("shortBreak");
@@ -210,7 +220,7 @@ export const TimerProvider = ({ children }: { children: React.ReactNode }) => {
         return () => {
             if (timerRef.current) clearTimeout(timerRef.current);
         };
-    }, [isRunning, timeLeft, playSound, mode, activeTaskId, settings, switchMode, syncTime]);
+    }, [isRunning, timeLeft, playSound, mode, activeTaskId, activeProjectId, settings, switchMode, syncTime]);
 
     // Update timeLeft if settings change (and timer not running)
     useEffect(() => {
@@ -231,7 +241,7 @@ export const TimerProvider = ({ children }: { children: React.ReactNode }) => {
 
 
     return (
-        <TimerContext.Provider value={{ mode, timeLeft, isRunning, settings, setSettings, switchMode, toggleTimer, resetTimer, activeTaskId, setActiveTaskId }}>
+        <TimerContext.Provider value={{ mode, timeLeft, isRunning, settings, setSettings, switchMode, toggleTimer, resetTimer, activeTaskId, setActiveTaskId, activeProjectId, setActiveProjectId }}>
             {children}
         </TimerContext.Provider>
     );

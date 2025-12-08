@@ -23,11 +23,11 @@ export function Navbar() {
                     </div>
 
                     <Link href="/" className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center text-white font-bold text-lg">
-                            P
+                        <div className="w-8 h-8 bg-neutral-800 rounded-md flex items-center justify-center text-white font-bold text-lg">
+                            T
                         </div>
                         <span className="font-bold text-lg hidden md:block">
-                            Focus Pulse
+                            Time.ly
                         </span>
                     </Link>
 
@@ -43,6 +43,12 @@ export function Navbar() {
                             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                         >
                             Reports
+                        </Link>
+                        <Link
+                            href="/stats"
+                            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            Stats
                         </Link>
                     </div>
                 </div>
@@ -90,6 +96,13 @@ export function Navbar() {
                             onClick={() => setIsMobileMenuOpen(false)}
                         >
                             Reports
+                        </Link>
+                        <Link
+                            href="/stats"
+                            className="text-sm font-medium p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                            Stats
                         </Link>
                     </div>
                 </div>

@@ -1,9 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { useTimer, TimerMode } from "@/context/TimerContext";
+import { useTheme } from "@/context/ThemeContext";
+import { useAmbientSound, AmbientSound } from "@/hooks/useAmbientSound";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useActiveTask } from "@/hooks/useActiveTask";
+import { TaskSelector } from "@/components/TaskSelector";
+import { SoundSelector } from "@/components/SoundSelector";
 
 const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -12,48 +18,70 @@ const formatTime = (seconds: number) => {
 };
 
 export function Timer() {
-    const { mode, timeLeft, isRunning, toggleTimer, switchMode, resetTimer, activeTaskId, settings } = useTimer();
+    const { mode, timeLeft, isRunning, toggleTimer, switchMode, resetTimer, activeTaskId, activeProjectId, settings } = useTimer();
+    const { activeTaskTitle, loading: taskLoading } = useActiveTask();
+    const { colorfulMode } = useTheme();
+    const [selectedSound, setSelectedSound] = useState<AmbientSound>("none");
 
-    // Progress percentage for visual circle (optional, doing simple bar/color first)
-    const getProgress = () => {
-        // Note: Assuming default durations for calculation simplicity in this MVP step
-        // In real app, use settings from hook to calculate percentage
-        return 100;
-    };
+    // Play sound only during focus mode when timer is running
+    useAmbientSound(isRunning && mode === 'focus', selectedSound);
+
+    // ... existing helpers
 
     const getThemeColor = () => {
-        switch (mode) {
-            case 'focus': return settings.focusColor || '#ef4444';
-            case 'shortBreak': return settings.shortBreakColor || '#14b8a6';
-            case 'longBreak': return settings.longBreakColor || '#3b82f6';
-            default: return '#ef4444';
+        if (colorfulMode) {
+            // Colorful mode - use vibrant colors
+            switch (mode) {
+                case 'focus': return settings.focusColor || '#ef4444';
+                case 'shortBreak': return settings.shortBreakColor || '#14b8a6';
+                case 'longBreak': return settings.longBreakColor || '#3b82f6';
+                default: return '#ef4444';
+            }
+        } else {
+            // Black & white mode - use white/light colors for visibility
+            return '#fafafa'; // Light color for all modes in B&W theme
         }
     }
 
     const containerStyle = {
-        backgroundColor: `${getThemeColor()}20`, // 20 = ~12% opacity hex
-        borderColor: `${getThemeColor()}40`
+        backgroundColor: `${colorfulMode ? getThemeColor() : '#171717'}20`, // Subtle background
+        borderColor: `${colorfulMode ? getThemeColor() : '#404040'}40`
     };
+
+    // Determine if we should show the selector
+    const hasActiveFocus = activeTaskId || activeProjectId;
+    // Only show selector if: user has selected something OR timer is at initial state (finished/reset)
+    const isTimerAtStart = timeLeft === settings.focusDuration;
+    const shouldShowSelector = hasActiveFocus || isTimerAtStart;
 
     return (
         <div
-            className="w-full max-w-lg backdrop-blur-sm rounded-3xl p-8 shadow-xl border transition-colors duration-500"
+            className="w-full max-w-lg backdrop-blur-sm rounded-3xl p-8 shadow-xl border-2 border-white/40 transition-colors duration-500"
             style={containerStyle}
         >
             {/* Mode Switcher */}
-            <div className="flex justify-center gap-2 mb-8 bg-black/5 dark:bg-white/5 p-1 rounded-full w-fit mx-auto">
-                {(['focus', 'shortBreak', 'longBreak'] as TimerMode[]).map((m) => (
-                    <button
-                        key={m}
-                        onClick={() => switchMode(m)}
-                        className={cn(
-                            "px-4 py-1.5 rounded-full text-sm font-medium transition-all text-muted-foreground hover:bg-white/50 dark:hover:bg-white/10"
-                        )}
-                        style={mode === m ? { backgroundColor: getThemeColor(), color: 'white' } : {}}
-                    >
-                        {m === 'focus' ? 'Focus' : m === 'shortBreak' ? 'Short Break' : 'Long Break'}
-                    </button>
-                ))}
+            <div className="flex justify-center items-center gap-4 mb-8">
+                <div className="flex gap-2 bg-neutral-900 p-1 rounded-full">
+                    {(['focus', 'shortBreak', 'longBreak'] as TimerMode[]).map((m) => (
+                        <button
+                            key={m}
+                            onClick={() => switchMode(m)}
+                            className={cn(
+                                "px-4 py-1.5 rounded-full text-sm font-medium transition-all",
+                                mode === m
+                                    ? "bg-white text-black"
+                                    : "text-neutral-400 hover:text-white hover:bg-neutral-800"
+                            )}
+                        >
+                            {m === 'focus' ? 'Focus' : m === 'shortBreak' ? 'Short Break' : 'Long Break'}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Sound Selector - only show in focus mode */}
+                {mode === 'focus' && (
+                    <SoundSelector selectedSound={selectedSound} onSoundChange={setSelectedSound} />
+                )}
             </div>
 
             {/* Timer Display */}
@@ -64,18 +92,26 @@ export function Timer() {
                 >
                     {formatTime(timeLeft)}
                 </div>
-                <div className="mt-4 text-center">
-                    <p className="text-muted-foreground font-medium text-lg">
-                        {activeTaskId ? (
-                            isRunning ? 'Working on Task' : 'Select "Start" to focus'
-                        ) : (
-                            isRunning ? 'Stay focused!' : 'Select a task or just start'
-                        )}
-                    </p>
-                    {activeTaskId && (
-                        <p className="text-sm opacity-50 mt-1">Task ID: #{activeTaskId.slice(0, 4)}</p>
-                    )}
-                </div>
+
+                {/* Task Selector Trigger (Only in Focus Mode and when appropriate) */}
+                {mode === 'focus' && shouldShowSelector && (
+                    <div className="mt-6 w-full max-w-xs mx-auto">
+                        <TaskSelector>
+                            <div className="flex flex-col items-center justify-center p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition-all border border-transparent hover:border-black/5 dark:hover:border-white/10 group">
+                                <span className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-1 group-hover:text-primary transition-colors">
+                                    {hasActiveFocus ? "WORKING ON" : "CURRENT FOCUS"}
+                                </span>
+                                <div className="flex items-center gap-2 text-center">
+                                    <span className={cn("text-lg font-medium truncate max-w-[250px]", !hasActiveFocus && "text-muted-foreground italic")}>
+                                        {hasActiveFocus
+                                            ? (activeTaskTitle || "Loading...")
+                                            : "Select a task..."}
+                                    </span>
+                                </div>
+                            </div>
+                        </TaskSelector>
+                    </div>
+                )}
             </div>
 
             {/* Controls */}
@@ -83,8 +119,7 @@ export function Timer() {
                 <Button
                     onClick={toggleTimer}
                     size="lg"
-                    className="h-16 px-8 text-xl rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-lg text-white"
-                    style={{ backgroundColor: getThemeColor() }}
+                    className="h-16 px-8 text-xl rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-lg bg-white text-black hover:bg-neutral-100"
                 >
                     {isRunning ? (
                         <>
@@ -102,7 +137,7 @@ export function Timer() {
                     onClick={resetTimer}
                     variant="ghost"
                     size="icon"
-                    className="h-16 w-16 rounded-2xl text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5"
+                    className="h-16 w-16 rounded-2xl text-white hover:bg-white/10"
                     title="Reset Timer"
                 >
                     <RotateCcw className="h-6 w-6" />

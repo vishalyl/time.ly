@@ -8,54 +8,46 @@ import {
     Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Circle, ChevronRight, ListTodo, ArrowLeft } from "lucide-react";
+import { CheckCircle2, Circle, ChevronRight, ListTodo, ArrowLeft, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function TaskSelector() {
+export function TaskSelector({ children }: { children?: React.ReactNode }) {
     const { projects } = useProjects();
-    const { activeTaskId, setActiveTaskId } = useTimer();
+    const { activeTaskId, setActiveTaskId, activeProjectId, setActiveProjectId } = useTimer();
     const [open, setOpen] = useState(false);
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-
-    // Get selected task details if any
-    const activeProject = projects.find(p =>
-        // We'd ideally need a way to look up project by task, but for now we iterate
-        // This is a bit inefficient but for MVP with small data it's fine.
-        // Actually, we can just display "Task Selected" if we don't have the title easily available without fetching all tasks.
-        // Optimization: In a real app we'd fetch the single active task or store task title in context.
-        // For now, let's just show "Select Task" or the ID.
-        // IMPROVEMENT: Let's fetch the task title? No, `useTasks` requires projectId. 
-        // We will stick to the selection flow.
-        true
-    );
 
     const handleTaskSelect = (taskId: string) => {
         setActiveTaskId(taskId);
         setOpen(false);
-        setSelectedProjectId(null); // Reset view
+        setSelectedProjectId(null);
+    };
+
+    const handleProjectSelect = (projectId: string) => {
+        setActiveProjectId(projectId);
+        setActiveTaskId(null); // Clear specific task
+        setOpen(false);
+        setSelectedProjectId(null);
+    };
+
+    const handleJustFocus = () => {
+        setActiveProjectId(null);
+        setActiveTaskId(null);
+        setOpen(false);
+        setSelectedProjectId(null);
     };
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <div className="flex flex-col items-center mt-8 cursor-pointer group">
-                    {activeTaskId ? (
-                        <div className="flex items-center gap-3 bg-white/50 dark:bg-slate-800/50 px-6 py-3 rounded-xl border border-border transition-all hover:bg-white/80 dark:hover:bg-slate-800">
-                            <CheckCircle2 className="w-5 h-5 text-red-500" />
-                            <div>
-                                <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider text-[10px] block mb-0.5">Current Task</span>
-                                <span className="font-bold text-slate-700 dark:text-slate-200">
-                                    Task #{activeTaskId.slice(0, 4)}
-                                </span>
-                            </div>
-                        </div>
-                    ) : (
+                {children ? children : (
+                    <div className="flex flex-col items-center mt-8 cursor-pointer group">
                         <Button variant="outline" size="lg" className="gap-2 text-lg h-auto py-3 px-6 rounded-xl border-dashed border-2 hover:border-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20">
                             <ListTodo className="w-5 h-5" />
                             Select Task to Focus
                         </Button>
-                    )}
-                </div>
+                    </div>
+                )}
             </DialogTrigger>
             <DialogContent className="sm:max-w-md h-[500px] flex flex-col p-0 gap-0 overflow-hidden">
                 <DialogHeader className="p-4 border-b">
@@ -75,6 +67,14 @@ export function TaskSelector() {
                     {!selectedProjectId ? (
                         // Project List
                         <div className="space-y-1">
+                            <div
+                                onClick={handleJustFocus}
+                                className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors border-b border-border/50 mb-2"
+                            >
+                                <div className="w-4 h-4 rounded-full border-2 border-slate-300" />
+                                <span className="font-medium italic text-muted-foreground">Just Focus (No Project/Task)</span>
+                            </div>
+
                             {projects.length === 0 && (
                                 <div className="text-center py-12 text-muted-foreground">
                                     No projects found.
@@ -85,20 +85,36 @@ export function TaskSelector() {
                             {projects.map(project => (
                                 <div
                                     key={project.id}
-                                    onClick={() => setSelectedProjectId(project.id)}
-                                    className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors group"
+                                    className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group"
                                 >
-                                    <div className="flex items-center gap-3">
+                                    <div
+                                        className="flex-1 flex items-center gap-3 cursor-pointer p-1"
+                                        onClick={() => setSelectedProjectId(project.id)}
+                                    >
                                         <span className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: project.color || '#94a3b8' }} />
                                         <span className="font-medium">{project.name}</span>
                                     </div>
-                                    <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500" />
+
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="text-xs h-7 px-2 text-muted-foreground hover:text-primary hover:bg-primary/10 gap-1"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleProjectSelect(project.id);
+                                        }}
+                                    >
+                                        <Target className="w-3 h-3" /> Focus
+                                    </Button>
+                                    <div onClick={() => setSelectedProjectId(project.id)} className="cursor-pointer p-1">
+                                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500" />
+                                    </div>
                                 </div>
                             ))}
                         </div>
                     ) : (
                         // Task List for Project
-                        <TaskListSelector projectId={selectedProjectId} onSelect={handleTaskSelect} />
+                        <TaskListSelector projectId={selectedProjectId} onSelect={handleTaskSelect} onProjectSelect={() => handleProjectSelect(selectedProjectId)} />
                     )}
                 </div>
             </DialogContent>
@@ -106,19 +122,26 @@ export function TaskSelector() {
     );
 }
 
-function TaskListSelector({ projectId, onSelect }: { projectId: string; onSelect: (id: string) => void }) {
+function TaskListSelector({ projectId, onSelect, onProjectSelect }: { projectId: string; onSelect: (id: string) => void, onProjectSelect: () => void }) {
     const { tasks } = useTasks(projectId);
-
-    if (tasks.length === 0) {
-        return (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground opacity-60">
-                <p>No tasks in this project</p>
-            </div>
-        );
-    }
 
     return (
         <div className="space-y-1">
+            {/* Focus on Project Option */}
+            <div
+                onClick={onProjectSelect}
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors border-b border-border/50 mb-2"
+            >
+                <Target className="w-4 h-4 text-primary" />
+                <span className="font-medium text-primary">Focus on Project Only</span>
+            </div>
+
+            {tasks.length === 0 && (
+                <div className="flex flex-col items-center justify-center p-8 text-muted-foreground opacity-60">
+                    <p>No tasks in this project</p>
+                </div>
+            )}
+
             {tasks.map(task => (
                 <div
                     key={task.id}

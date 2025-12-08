@@ -34,11 +34,6 @@
   --radius-sm: calc(var(--radius) - 4px);
 }
 
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to sure everything still looks the same as it did with v3.
-  If you'd like to switch to the new default border color, you can remove this `base` layer.
-*/
 @layer base {
 
   *,
@@ -50,7 +45,73 @@
   }
 }
 
+/* Black & White Theme (Default) */
 :root {
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(0 0% 4%);
+
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(0 0% 4%);
+
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(0 0% 4%);
+
+  --primary: hsl(0 0% 9%);
+  --primary-foreground: hsl(0 0% 98%);
+
+  --secondary: hsl(0 0% 96%);
+  --secondary-foreground: hsl(0 0% 9%);
+
+  --muted: hsl(0 0% 96%);
+  --muted-foreground: hsl(0 0% 45%);
+
+  --accent: hsl(0 0% 96%);
+  --accent-foreground: hsl(0 0% 9%);
+
+  --destructive: hsl(0 84% 60%);
+  --destructive-foreground: hsl(0 0% 98%);
+
+  --border: hsl(0 0% 90%);
+  --input: hsl(0 0% 90%);
+  --ring: hsl(0 0% 4%);
+
+  --radius: 0.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: hsl(0 0% 4%);
+    --foreground: hsl(0 0% 98%);
+
+    --card: hsl(0 0% 4%);
+    --card-foreground: hsl(0 0% 98%);
+
+    --popover: hsl(0 0% 4%);
+    --popover-foreground: hsl(0 0% 98%);
+
+    --primary: hsl(0 0% 98%);
+    --primary-foreground: hsl(0 0% 9%);
+
+    --secondary: hsl(0 0% 15%);
+    --secondary-foreground: hsl(0 0% 98%);
+
+    --muted: hsl(0 0% 15%);
+    --muted-foreground: hsl(0 0% 64%);
+
+    --accent: hsl(0 0% 15%);
+    --accent-foreground: hsl(0 0% 98%);
+
+    --destructive: hsl(0 63% 31%);
+    --destructive-foreground: hsl(0 0% 98%);
+
+    --border: hsl(0 0% 15%);
+    --input: hsl(0 0% 15%);
+    --ring: hsl(0 0% 83%);
+  }
+}
+
+/* Colorful Mode Override */
+.colorful-mode {
   --background: hsl(0 0% 100%);
   --foreground: hsl(222.2 84% 4.9%);
 
@@ -60,7 +121,7 @@
   --popover: hsl(0 0% 100%);
   --popover-foreground: hsl(222.2 84% 4.9%);
 
-  --primary: hsl(221.2 83.2% 53.3%);
+  --primary: hsl(0 84% 60%);
   --primary-foreground: hsl(210 40% 98%);
 
   --secondary: hsl(210 40% 96.1%);
@@ -77,13 +138,11 @@
 
   --border: hsl(214.3 31.8% 91.4%);
   --input: hsl(214.3 31.8% 91.4%);
-  --ring: hsl(221.2 83.2% 53.3%);
-
-  --radius: 0.5rem;
+  --ring: hsl(0 84% 60%);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  .colorful-mode {
     --background: hsl(222.2 84% 4.9%);
     --foreground: hsl(210 40% 98%);
 
@@ -93,8 +152,8 @@
     --popover: hsl(222.2 84% 4.9%);
     --popover-foreground: hsl(210 40% 98%);
 
-    --primary: hsl(217.2 91.2% 59.8%);
-    --primary-foreground: hsl(222.2 47.4% 11.2%);
+    --primary: hsl(0 84% 60%);
+    --primary-foreground: hsl(210 40% 98%);
 
     --secondary: hsl(217.2 32.6% 17.5%);
     --secondary-foreground: hsl(210 40% 98%);
@@ -110,39 +169,8 @@
 
     --border: hsl(217.2 32.6% 17.5%);
     --input: hsl(217.2 32.6% 17.5%);
-    --ring: hsl(212.7 26.8% 83.9%);
+    --ring: hsl(0 84% 60%);
   }
-}
-
-/* Force dark mode class usage if needed, but media query is safer default for now or use .dark class */
-.dark {
-  --background: hsl(222.2 84% 4.9%);
-  --foreground: hsl(210 40% 98%);
-
-  --card: hsl(222.2 84% 4.9%);
-  --card-foreground: hsl(210 40% 98%);
-
-  --popover: hsl(222.2 84% 4.9%);
-  --popover-foreground: hsl(210 40% 98%);
-
-  --primary: hsl(217.2 91.2% 59.8%);
-  --primary-foreground: hsl(222.2 47.4% 11.2%);
-
-  --secondary: hsl(217.2 32.6% 17.5%);
-  --secondary-foreground: hsl(210 40% 98%);
-
-  --muted: hsl(217.2 32.6% 17.5%);
-  --muted-foreground: hsl(215 20.2% 65.1%);
-
-  --accent: hsl(217.2 32.6% 17.5%);
-  --accent-foreground: hsl(210 40% 98%);
-
-  --destructive: hsl(0 62.8% 30.6%);
-  --destructive-foreground: hsl(210 40% 98%);
-
-  --border: hsl(217.2 32.6% 17.5%);
-  --input: hsl(217.2 32.6% 17.5%);
-  --ring: hsl(212.7 26.8% 83.9%);
 }
 
 @layer base {

@@ -3,12 +3,13 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { TimerProvider } from "@/context/TimerContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Focus Pulse",
-  description: "Track your focus time and manage projects.",
+  title: "Time.ly",
+  description: "Focus timer and productivity tracker.",
 };
 
 export default function RootLayout({
@@ -19,11 +20,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} antialiased`}>
-        <AuthProvider>
-          <TimerProvider>
-            {children}
-          </TimerProvider>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <TimerProvider>
+              {children}
+            </TimerProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
