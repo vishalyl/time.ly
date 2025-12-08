@@ -81,25 +81,25 @@ export function Navbar() {
 
             {/* Mobile Menu */}
             {isMobileMenuOpen && (
-                <div className="md:hidden border-t p-4 bg-background">
+                <div className="md:hidden border-t p-4 bg-black">
                     <div className="flex flex-col space-y-4">
                         <Link
                             href="/projects"
-                            className="text-sm font-medium p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md"
+                            className="text-sm font-medium p-2 hover:bg-neutral-900 rounded-md"
                             onClick={() => setIsMobileMenuOpen(false)}
                         >
                             Projects
                         </Link>
                         <Link
                             href="/reports"
-                            className="text-sm font-medium p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md"
+                            className="text-sm font-medium p-2 hover:bg-neutral-900 rounded-md"
                             onClick={() => setIsMobileMenuOpen(false)}
                         >
                             Reports
                         </Link>
                         <Link
                             href="/stats"
-                            className="text-sm font-medium p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md"
+                            className="text-sm font-medium p-2 hover:bg-neutral-900 rounded-md"
                             onClick={() => setIsMobileMenuOpen(false)}
                         >
                             Stats

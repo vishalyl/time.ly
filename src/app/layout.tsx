@@ -12,6 +12,11 @@ export const metadata: Metadata = {
   description: "Minimalist Pomodoro timer with ambient sounds, project tracking, and analytics. Stay focused and boost productivity.",
   keywords: ["pomodoro timer", "focus timer", "productivity", "time tracking", "pomodoro technique"],
   authors: [{ name: "Time.ly" }],
+  viewport: "width=device-width, initial-scale=1",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#000000" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
