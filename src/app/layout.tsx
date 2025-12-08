@@ -8,8 +8,17 @@ import { ThemeProvider } from "@/context/ThemeContext";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Time.ly",
-  description: "Focus timer and productivity tracker.",
+  title: "Time.ly - Focus Timer & Productivity Tracker",
+  description: "Minimalist Pomodoro timer with ambient sounds, project tracking, and analytics. Stay focused and boost productivity.",
+  keywords: ["pomodoro timer", "focus timer", "productivity", "time tracking", "pomodoro technique"],
+  authors: [{ name: "Time.ly" }],
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: "/apple-icon.png",
+  },
 };
 
 export default function RootLayout({
