@@ -102,23 +102,34 @@ export const TimerProvider = ({ children }: { children: React.ReactNode }) => {
             const secondsToAdd = accumulatedSecondsRef.current;
             accumulatedSecondsRef.current = 0; // Reset local accumulator
 
+            console.log("⏱️ Syncing time:", secondsToAdd, "seconds (", Math.floor(secondsToAdd / 60), "min)");
+            console.log("📍 Active task:", activeTaskId);
+            console.log("📍 Active project:", activeProjectId);
+
             try {
                 const { doc, updateDoc, increment } = await import("firebase/firestore");
                 const { db } = await import("@/lib/firebase");
 
                 if (activeTaskId) {
+                    console.log("✅ Updating task time...");
                     await updateDoc(doc(db, "tasks", activeTaskId), {
                         totalSeconds: increment(secondsToAdd)
                     });
+                    console.log("✅ Task time updated!");
                 } else if (activeProjectId) {
-                    // Track time to project if no task is selected
+                    console.log("✅ Updating project time...");
                     await updateDoc(doc(db, "projects", activeProjectId), {
                         totalSeconds: increment(secondsToAdd)
                     });
+                    console.log("✅ Project time updated!");
+                } else {
+                    console.log("⚠️ No task or project selected - time not saved");
                 }
             } catch (e) {
-                console.error("Failed to sync time", e);
+                console.error("❌ Failed to sync time:", e);
             }
+        } else if (accumulatedSecondsRef.current > 0) {
+            console.log("⏭️ Skipping sync (not in focus mode)");
         }
     }, [activeTaskId, activeProjectId, mode]);
 
