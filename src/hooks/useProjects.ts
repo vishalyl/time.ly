@@ -34,20 +34,33 @@ export const useProjects = () => {
             return;
         }
 
+        console.log("🔍 Setting up projects listener for user:", user.uid);
+
         const q = query(
             collection(db, "projects"),
             where("userId", "==", user.uid),
             orderBy("createdAt", "desc")
         );
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const projectsData = snapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-            })) as Project[];
-            setProjects(projectsData);
-            setLoading(false);
-        });
+        const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+                console.log("📊 Projects snapshot received:", snapshot.docs.length, "projects");
+                const projectsData = snapshot.docs.map((doc) => ({
+                    id: doc.id,
+                    ...doc.data(),
+                })) as Project[];
+                console.log("✅ Projects loaded:", projectsData);
+                setProjects(projectsData);
+                setLoading(false);
+            },
+            (error) => {
+                console.error("❌ Projects listener error:", error);
+                console.error("Error code:", error.code);
+                console.error("Error message:", error.message);
+                setLoading(false);
+            }
+        );
 
         return () => unsubscribe();
     }, [user]);
