@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
@@ -12,11 +12,6 @@ export const metadata: Metadata = {
   description: "Minimalist Pomodoro timer with ambient sounds, project tracking, and analytics. Stay focused and boost productivity.",
   keywords: ["pomodoro timer", "focus timer", "productivity", "time tracking", "pomodoro technique"],
   authors: [{ name: "Time.ly" }],
-  viewport: "width=device-width, initial-scale=1",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#000000" },
-    { media: "(prefers-color-scheme: dark)", color: "#000000" },
-  ],
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
@@ -24,6 +19,12 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-icon.png",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#000000",
 };
 
 export default function RootLayout({
