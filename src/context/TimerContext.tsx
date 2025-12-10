@@ -1,7 +1,6 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
-import { useAuth } from "@/context/AuthContext";
 
 export type TimerMode = "focus" | "shortBreak" | "longBreak";
 
@@ -45,7 +44,6 @@ interface TimerContextType {
 const TimerContext = createContext<TimerContextType | undefined>(undefined);
 
 export const TimerProvider = ({ children }: { children: React.ReactNode }) => {
-    const { user } = useAuth();
     const [mode, setMode] = useState<TimerMode>("focus");
     const [timeLeft, setTimeLeft] = useState(DEFAULT_SETTINGS.focusDuration);
     const [isRunning, setIsRunning] = useState(false);
@@ -100,36 +98,18 @@ export const TimerProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Helper to sync time to Firestore
     const syncTime = useCallback(async () => {
-        console.log("🔍 syncTime called - mode:", mode, "accumulated:", accumulatedSecondsRef.current, "user:", user?.uid);
-
-        if (accumulatedSecondsRef.current > 0 && mode === 'focus' && user) {
+        if (accumulatedSecondsRef.current > 0 && mode === 'focus') {
             const secondsToAdd = accumulatedSecondsRef.current;
             accumulatedSecondsRef.current = 0; // Reset local accumulator
 
             console.log("⏱️ Syncing time:", secondsToAdd, "seconds (", Math.floor(secondsToAdd / 60), "min)");
             console.log("📍 Active task:", activeTaskId);
             console.log("📍 Active project:", activeProjectId);
-            console.log("👤 User:", user.uid);
 
             try {
-                const { doc, updateDoc, increment, setDoc, addDoc, collection, serverTimestamp } = await import("firebase/firestore");
+                const { doc, updateDoc, increment } = await import("firebase/firestore");
                 const { db } = await import("@/lib/firebase");
 
-                const minutesToAdd = Math.floor(secondsToAdd / 60);
-
-                // ALWAYS update daily goal progress (todayMinutes)
-                if (minutesToAdd > 0) {
-                    console.log("📊 Updating daily goal progress...");
-                    const userSettingsDoc = doc(db, "user_settings", user.uid);
-                    await setDoc(userSettingsDoc, {
-                        userId: user.uid,
-                        todayMinutes: increment(minutesToAdd),
-                        lastUpdated: serverTimestamp()
-                    }, { merge: true });
-                    console.log("✅ Daily goal updated! Added", minutesToAdd, "minutes");
-                }
-
-                // Update task/project time if selected
                 if (activeTaskId) {
                     console.log("✅ Updating task time...");
                     await updateDoc(doc(db, "tasks", activeTaskId), {
@@ -143,26 +123,15 @@ export const TimerProvider = ({ children }: { children: React.ReactNode }) => {
                     });
                     console.log("✅ Project time updated!");
                 } else {
-                    // No task/project selected - create a focus session record
-                    console.log("📝 Creating focus session for unassigned time...");
-                    await addDoc(collection(db, "focus_sessions"), {
-                        userId: user.uid,
-                        seconds: secondsToAdd,
-                        projectId: null,
-                        taskId: null,
-                        createdAt: serverTimestamp()
-                    });
-                    console.log("✅ Focus session created!");
+                    console.log("⚠️ No task or project selected - time not saved");
                 }
             } catch (e) {
                 console.error("❌ Failed to sync time:", e);
             }
-        } else {
-            if (accumulatedSecondsRef.current > 0) {
-                console.log("⏭️ Skipping sync - mode:", mode, "(expected 'focus'), user:", user?.uid);
-            }
+        } else if (accumulatedSecondsRef.current > 0) {
+            console.log("⏭️ Skipping sync (not in focus mode)");
         }
-    }, [activeTaskId, activeProjectId, mode, user]);
+    }, [activeTaskId, activeProjectId, mode]);
 
     const switchMode = useCallback((newMode: TimerMode) => {
         syncTime(); // Sync before switching
@@ -280,34 +249,6 @@ export const TimerProvider = ({ children }: { children: React.ReactNode }) => {
             }
         }
     }, [settings, mode]);
-
-    // Periodic auto-save every 30 seconds
-    useEffect(() => {
-        if (isRunning && mode === 'focus') {
-            const autoSaveInterval = setInterval(() => {
-                console.log("💾 Auto-saving time...");
-                syncTime();
-            }, 30000); // 30 seconds
-
-            return () => clearInterval(autoSaveInterval);
-        }
-    }, [isRunning, mode, syncTime]);
-
-    // Save on browser close
-    useEffect(() => {
-        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-            if (isRunning && accumulatedSecondsRef.current > 0) {
-                console.log("🚪 Browser closing - saving time...");
-                syncTime();
-                // Show warning if timer is running
-                e.preventDefault();
-                e.returnValue = '';
-            }
-        };
-
-        window.addEventListener('beforeunload', handleBeforeUnload);
-        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-    }, [isRunning, syncTime]);
 
 
     return (
