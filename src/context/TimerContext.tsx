@@ -100,6 +100,8 @@ export const TimerProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Helper to sync time to Firestore
     const syncTime = useCallback(async () => {
+        console.log("🔍 syncTime called - mode:", mode, "accumulated:", accumulatedSecondsRef.current, "user:", user?.uid);
+
         if (accumulatedSecondsRef.current > 0 && mode === 'focus' && user) {
             const secondsToAdd = accumulatedSecondsRef.current;
             accumulatedSecondsRef.current = 0; // Reset local accumulator
@@ -155,10 +157,12 @@ export const TimerProvider = ({ children }: { children: React.ReactNode }) => {
             } catch (e) {
                 console.error("❌ Failed to sync time:", e);
             }
-        } else if (accumulatedSecondsRef.current > 0) {
-            console.log("⏭️ Skipping sync (not in focus mode)");
+        } else {
+            if (accumulatedSecondsRef.current > 0) {
+                console.log("⏭️ Skipping sync - mode:", mode, "(expected 'focus'), user:", user?.uid);
+            }
         }
-    }, [activeTaskId, activeProjectId, mode]);
+    }, [activeTaskId, activeProjectId, mode, user]);
 
     const switchMode = useCallback((newMode: TimerMode) => {
         syncTime(); // Sync before switching
