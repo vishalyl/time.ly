@@ -90,7 +90,7 @@ export default function StatsPage() {
                             <Clock className="h-4 w-4 text-primary" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{todayMinutes} min</div>
+                            <div className="text-2xl font-bold">{Math.round(todayMinutes)} min</div>
                             <p className="text-xs text-muted-foreground mt-1">
                                 {dailyGoal ? `${Math.round(goalProgress)}% of goal` : "No goal set"}
                             </p>
@@ -133,7 +133,7 @@ export default function StatsPage() {
                                 <div className="space-y-2">
                                     <div className="flex justify-between text-sm">
                                         <span>Progress</span>
-                                        <span>{todayMinutes} / {dailyGoal} min</span>
+                                        <span>{Math.round(todayMinutes)} / {dailyGoal} min</span>
                                     </div>
                                     <div className="w-full bg-secondary rounded-full h-3 overflow-hidden">
                                         <div

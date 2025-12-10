@@ -12,7 +12,7 @@ export function Navbar() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     return (
-        <nav className="w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+        <nav className="w-full border-b border-border/40 bg-black sticky top-0 z-50">
             <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-4 md:px-8">
                 <div className="flex items-center gap-6">
                     {/* Mobile Menu Toggle */}
@@ -23,10 +23,10 @@ export function Navbar() {
                     </div>
 
                     <Link href="/" className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-neutral-800 rounded-md flex items-center justify-center text-white font-bold text-lg">
+                        <div className="w-8 h-8 bg-white rounded-md flex items-center justify-center text-black font-bold text-lg">
                             T
                         </div>
-                        <span className="font-bold text-lg hidden md:block">
+                        <span className="font-bold text-lg text-white hidden md:block">
                             Time.ly
                         </span>
                     </Link>

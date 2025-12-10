@@ -107,8 +107,21 @@ export const TimerProvider = ({ children }: { children: React.ReactNode }) => {
             console.log("📍 Active project:", activeProjectId);
 
             try {
-                const { doc, updateDoc, increment } = await import("firebase/firestore");
+                const { doc, updateDoc, increment, setDoc } = await import("firebase/firestore");
                 const { db } = await import("@/lib/firebase");
+                const { getAuth } = await import("firebase/auth");
+
+                // Always update user's daily total (for daily goal tracking)
+                const auth = getAuth();
+                const currentUser = auth.currentUser;
+                if (currentUser) {
+                    const userSettingsDoc = doc(db, "user_settings", currentUser.uid);
+                    await setDoc(userSettingsDoc, {
+                        userId: currentUser.uid,
+                        todayMinutes: increment(secondsToAdd / 60)
+                    }, { merge: true });
+                    console.log("✅ Updated daily total!");
+                }
 
                 if (activeTaskId) {
                     console.log("✅ Updating task time...");
@@ -123,7 +136,7 @@ export const TimerProvider = ({ children }: { children: React.ReactNode }) => {
                     });
                     console.log("✅ Project time updated!");
                 } else {
-                    console.log("⚠️ No task or project selected - time not saved");
+                    console.log("✅ No task or project selected - time saved to daily total (unassigned focus time)");
                 }
             } catch (e) {
                 console.error("❌ Failed to sync time:", e);

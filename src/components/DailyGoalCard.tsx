@@ -57,7 +57,7 @@ export function DailyGoalCard({ dailyGoal, todayMinutes }: DailyGoalCardProps) {
 
                         {/* Text Info */}
                         <div>
-                            <p className="text-2xl font-bold">{todayMinutes} min</p>
+                            <p className="text-2xl font-bold">{Math.round(todayMinutes)} min</p>
                             <p className="text-xs text-muted-foreground">of {dailyGoal} min goal</p>
                         </div>
                     </div>

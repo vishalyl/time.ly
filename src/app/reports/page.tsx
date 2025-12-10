@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { useProjects } from "@/hooks/useProjects";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
@@ -18,24 +18,27 @@ export default function ReportsPage() {
     const [allTasks, setAllTasks] = useState<any[]>([]);
     const [timeRange, setTimeRange] = useState("week"); // daily, week, month, year
     const [selectedProjectId, setSelectedProjectId] = useState<string>("all");
+    const [userTodayMinutes, setUserTodayMinutes] = useState<number>(0);
 
-    // Fetch ALL tasks
+    // Fetch ALL tasks and user settings
     useEffect(() => {
         if (!user) return;
-        const fetchAllTasks = async () => {
-            // In a real app with history, we'd query a 'sessions' collection by date range.
-            // For now, we fetch all tasks and use their 'totalSeconds' (accumulated all-time).
-            // LIMITATION: 'totalSeconds' is LIFETIME duration. We cannot filter by "Last Week" accurately without history.
-            // However, for the UI demo, we will keep the filter UI but it will currently show LIFETIME data 
-            // unless we add 'updatedAt' or similar heuristics. 
-            // To be honest to the user, we should label it "All Time" until history is added.
-            // BUT user explicitly asked for filters. I will implement the UI.
+        const fetchData = async () => {
+            // Fetch tasks
             const q = query(collection(db, "tasks"), where("userId", "==", user.uid));
             const snapshot = await getDocs(q);
             const tasks = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
             setAllTasks(tasks);
+
+            // Fetch user settings to get total today minutes
+            const userSettingsDoc = doc(db, "user_settings", user.uid);
+            const userSettingsSnap = await getDoc(userSettingsDoc);
+            if (userSettingsSnap.exists()) {
+                const data = userSettingsSnap.data();
+                setUserTodayMinutes(data.todayMinutes || 0);
+            }
         };
-        fetchAllTasks();
+        fetchData();
     }, [user]);
 
     // --- Data Processing ---
@@ -61,6 +64,32 @@ export default function ReportsPage() {
             color: p.color || COLORS[0]
         };
     }).filter(d => d.value > 0);
+
+    // Calculate unassigned time (time tracked without a project)
+    const totalProjectSeconds = projectDistData.reduce((acc, p) => acc + p.value, 0);
+    const userTodaySeconds = userTodayMinutes * 60;
+    const unassignedSeconds = Math.max(0, userTodaySeconds - totalProjectSeconds);
+
+    // Debug logging
+    console.log("📊 Reports Debug:");
+    console.log("  User today minutes:", userTodayMinutes);
+    console.log("  User today seconds:", userTodaySeconds);
+    console.log("  Total project seconds:", totalProjectSeconds);
+    console.log("  Unassigned seconds:", unassignedSeconds);
+
+    // Add "No Project Selected" to distribution if there's unassigned time
+    const finalProjectDistData = [...projectDistData];
+    if (unassignedSeconds > 0) {
+        finalProjectDistData.push({
+            id: 'unassigned',
+            name: 'No Project Selected',
+            value: unassignedSeconds,
+            color: '#6b7280' // Gray color for unassigned
+        });
+        console.log("  ✅ Added 'No Project Selected' to chart");
+    } else {
+        console.log("  ⚠️ No unassigned time to display");
+    }
 
     // 4. Task Distribution Data (for selected project)
     const selectedProjectTasks = selectedProjectId && selectedProjectId !== 'all'
@@ -139,11 +168,11 @@ export default function ReportsPage() {
                             <CardTitle>Projects Distribution</CardTitle>
                         </CardHeader>
                         <CardContent className="h-[300px] relative">
-                            {projectDistData.length > 0 ? (
+                            {finalProjectDistData.length > 0 ? (
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                         <Pie
-                                            data={projectDistData}
+                                            data={finalProjectDistData}
                                             cx="50%"
                                             cy="50%"
                                             innerRadius={60}
@@ -152,7 +181,7 @@ export default function ReportsPage() {
                                             dataKey="value"
                                             stroke="none"
                                         >
-                                            {projectDistData.map((entry, index) => (
+                                            {finalProjectDistData.map((entry, index) => (
                                                 <Cell key={entry.id} fill={entry.color} />
                                             ))}
                                         </Pie>
