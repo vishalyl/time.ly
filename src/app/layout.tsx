@@ -14,10 +14,11 @@ export const metadata: Metadata = {
   authors: [{ name: "Time.ly" }],
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
       { url: "/icon.png", type: "image/png", sizes: "512x512" },
+      { url: "/favicon.ico", sizes: "any" },
     ],
     apple: "/apple-icon.png",
+    shortcut: "/icon.png",
   },
 };
 
