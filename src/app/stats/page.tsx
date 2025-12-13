@@ -10,13 +10,11 @@ import { Flame, Target, TrendingUp, Clock } from "lucide-react";
 import { useGoals } from "@/hooks/useGoals";
 
 export default function StatsPage() {
-    const { dailyGoal, todayMinutes, setDailyGoal, deleteDailyGoal, loading } = useGoals();
+    const { dailyGoal, todayMinutes, currentStreak, longestStreak, setDailyGoal, deleteDailyGoal, loading } = useGoals();
     const [goalInput, setGoalInput] = useState("");
     const [isSettingGoal, setIsSettingGoal] = useState(false);
 
-    // These will be calculated from real data in the future
-    const currentStreak = 0;
-    const longestStreak = 0;
+    // This will be calculated from real data in the future
     const weeklyMinutes = 0;
 
     const handleSetGoal = async () => {

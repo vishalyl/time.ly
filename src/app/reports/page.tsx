@@ -9,12 +9,15 @@ import { useAuth } from "@/context/AuthContext";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useGoals } from "@/hooks/useGoals";
+import { Flame, TrendingUp } from "lucide-react";
 
 const COLORS = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#6366f1', '#14b8a6'];
 
 export default function ReportsPage() {
     const { user } = useAuth();
     const { projects } = useProjects();
+    const { currentStreak, longestStreak } = useGoals();
     const [allTasks, setAllTasks] = useState<any[]>([]);
     const [timeRange, setTimeRange] = useState("week"); // daily, week, month, year
     const [selectedProjectId, setSelectedProjectId] = useState<string>("all");
@@ -133,6 +136,35 @@ export default function ReportsPage() {
                         </Select>
                     </div>
                 </header>
+
+                {/* Streak Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Current Streak</CardTitle>
+                            <Flame className="h-4 w-4 text-orange-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{currentStreak} days</div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                {currentStreak > 0 ? "Keep it going!" : "Start focusing to build a streak"}
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Longest Streak</CardTitle>
+                            <TrendingUp className="h-4 w-4 text-primary" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{longestStreak} days</div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                {longestStreak > 0 ? "Personal best" : "No streak yet"}
+                            </p>
+                        </CardContent>
+                    </Card>
+                </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Box 1: Total Focus Summary */}
