@@ -120,20 +120,23 @@ export default function ReportsPage() {
                     <h1 className="text-3xl font-bold">Analytics</h1>
 
                     {/* Time Range Filter */}
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-muted-foreground">Range:</span>
-                        <Select value={timeRange} onValueChange={setTimeRange}>
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="Select Range" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="daily">Daily (Today)</SelectItem>
-                                <SelectItem value="week">Weekly</SelectItem>
-                                <SelectItem value="month">Monthly</SelectItem>
-                                <SelectItem value="year">Yearly</SelectItem>
-                                <SelectItem value="all">All Time</SelectItem>
-                            </SelectContent>
-                        </Select>
+                    <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-muted-foreground">Range:</span>
+                            <Select value={timeRange} onValueChange={setTimeRange}>
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Select Range" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="daily">Daily (Today)</SelectItem>
+                                    <SelectItem value="week">Weekly</SelectItem>
+                                    <SelectItem value="month">Monthly</SelectItem>
+                                    <SelectItem value="year">Yearly</SelectItem>
+                                    <SelectItem value="all">All Time</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Currently showing all-time data</p>
                     </div>
                 </header>
 

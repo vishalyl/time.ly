@@ -14,8 +14,10 @@ export default function StatsPage() {
     const [goalInput, setGoalInput] = useState("");
     const [isSettingGoal, setIsSettingGoal] = useState(false);
 
-    // This will be calculated from real data in the future
-    const weeklyMinutes = 0;
+
+    // Weekly calculation - currently showing today's minutes since we don't have session history yet
+    // TODO: Implement proper weekly calculation when we add session tracking
+    const weeklyMinutes = todayMinutes;
 
     const handleSetGoal = async () => {
         const minutes = parseInt(goalInput);
